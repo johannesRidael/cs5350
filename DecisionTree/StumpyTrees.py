@@ -35,70 +35,13 @@ def findEE(data, indexes, splitInd, tagInd, weights):
         for tag in splitDic[splitVal]:
             if tag != "total":
                 tSum += splitDic[splitVal][tag]
-                hold -= splitDic[splitVal][tag] * math.log(splitDic[splitVal][tag] / splitDic[splitVal]["total"], 2) # divided by the total, but then when it is scaled to its fraction of all data that gets cancelled out
+                hold -= splitDic[splitVal][tag] * math.log(splitDic[splitVal][tag] / splitDic[splitVal]["total"], 2)
+                # divided by the total, but then when it is scaled to its fraction of all data that gets cancelled out
         entropy += hold
     entropy = hold / tSum
     return entropy
 
 
-def findE(data, indexes, splitInd, tagInd, weights):
-    splitDic = {}
-    #print(len(indexes))
-    for index in indexes:
-        if data[index][splitInd] not in splitDic:
-            tempDic = {}
-            tempDic[data[index][tagInd]] = weights[index]
-            splitDic[data[index][splitInd]] = tempDic
-        elif data[index][tagInd] not in splitDic[data[index][splitInd]]:
-            splitDic[data[index][splitInd]][data[index][tagInd]] = weights[index]
-        else:
-            splitDic[data[index][splitInd]][data[index][tagInd]] += weights[index]
-        # tagDic[x][y] now contains a count of that result with that data
-    #print(splitDic)
-
-    totalWrong = 0
-    modVal = -1
-    for splitVal in splitDic:
-        maxi = 0
-        for tag in splitDic[splitVal]:
-            if tag != "total":
-                if maxi < splitDic[splitVal][tag]:
-                    totalWrong += maxi
-                    maxi = splitDic[splitVal][tag]
-                    modind = tag
-                else:
-                    totalWrong += splitDic[splitVal][tag]
-    #print(totalWrong)
-    return totalWrong  # normally this would be scaled but the math all cancels out anyway
-
-
-def findGI(data, indexes, splitInd, tagInd):
-    splitDic = {}
-    for index in indexes:
-        if data[index][splitInd] not in splitDic:
-            tempDic = {}
-            tempDic[data[index][tagInd]] = 1
-            splitDic[data[index][splitInd]] = tempDic
-            splitDic[data[index][splitInd]]["total"] = 1
-        elif data[index][tagInd] not in splitDic[data[index][splitInd]]:
-            splitDic[data[index][splitInd]][data[index][tagInd]] = 1
-            splitDic[data[index][splitInd]]["total"] += 1
-        else:
-            splitDic[data[index][splitInd]][data[index][tagInd]] += 1
-            splitDic[data[index][splitInd]]["total"] += 1
-        # tagDic[x][y] now contains a count of that result with that data
-
-    GI = 0
-    tSum = 0
-    for splitVal in splitDic:
-        hold = 0
-        for tag in splitDic[splitVal]:
-            if tag != "total":
-                tSum += splitDic[splitVal][tag]
-                hold -= (splitDic[splitVal][tag] / splitDic[splitVal]["total"]) ** 2
-        GI += splitDic[splitVal]["total"] * (1 - hold)
-    GI = hold / tSum
-    return GI
 
 
 # returns a list of sets where the attribute at splitInd is all equal
@@ -248,7 +191,7 @@ def parseData(File):
         for i in range(0, len(medList)):
             if medList[i] is not None:
                 pList[i] = {0, 1}
-                if int(data[key][i]) >= medList[i]:
+                if int(data[key][i]) > medList[i]:
                     data[key][i] = 1
                 else:
                     data[key][i] = 0
