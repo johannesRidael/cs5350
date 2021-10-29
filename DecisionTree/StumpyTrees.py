@@ -38,7 +38,7 @@ def findEE(data, indexes, splitInd, tagInd, weights):
                 hold -= splitDic[splitVal][tag] * math.log(splitDic[splitVal][tag] / splitDic[splitVal]["total"], 2)
                 # divided by the total, but then when it is scaled to its fraction of all data that gets cancelled out
         entropy += hold
-    entropy = hold / tSum
+    entropy = entropy / tSum
     return entropy
 
 
@@ -95,15 +95,15 @@ def ID3(data, tree, count, card, indexes, depth, pastSplits, pList, weights):
 
     mini = card
     mInd = -1
-    print("new stump")
+    #print("new stump")
     for i in range(0, card):  # this loops finds the minimum Entropy/Error/GI
         if i not in pastSplits:  # no choosing the same one
             hold = findEE(data, indexes, i, card, weights)  # card is also the index of the result
-            print("i: ", i, " ", hold)
+            #print("i: ", i, " ", hold)
             if hold < mini:
                 mInd = i
                 mini = hold
-    print(mini)
+    #print(mini)
     tup = splitData(data, pList, indexes, mInd)
     #print("tup: ", tup)
     tree[mInd] = {}

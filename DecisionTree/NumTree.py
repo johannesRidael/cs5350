@@ -38,7 +38,7 @@ def findEE(indexes, splitInd, tagInd):
                 tSum += splitDic[splitVal][tag]
                 hold -= splitDic[splitVal][tag] * math.log(splitDic[splitVal][tag] / splitDic[splitVal]["total"], 2)
         entropy += hold
-    entropy = hold / tSum
+    entropy = entropy / tSum
     return entropy
 
 

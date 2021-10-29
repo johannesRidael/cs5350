@@ -30,7 +30,6 @@ def wTestTree(tree, data: dict, weights):
 
 
 def predictADA(t, trees, alphas):
-    incorrect, total = 0, 0
     summ = 0
     for j in range(len(alphas)):
         if stumps.predict(t, trees[j]) == "yes":
@@ -70,19 +69,18 @@ data, count, medians, arr = stumps.parseData(TRAININGFILE)
 count = len(data)
 for i in range(count):
     weights.append(1/count)
-    print(data[i][14])
 wF.write(str(weights) + '\n')
 trees = []
 trees.append(stumps.createStump(weights, arr).copy())
 inc, tot, wrongInds = testTree(trees[0], data)
-stumpsTRstr.write("Tree1 Training: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc/tot) + '\n')
 e = wTestTree(trees[0], data, weights)
+stumpsTRstr.write("Tree 1 Training Error: " + str(e) + '\n')
 #print(trees[0])
 alpha = 0.5 * math.log((1-e)/(e))
 aF.write(str(alpha) + '\n')
 alphas.append(alpha)
-inc, tot, wInds = testTree(trees[0], testData)
-stumpsTEstr.write("Tree1 Test: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc/tot) + '\n')
+err = wTestTree(trees[0], testData, weights)
+stumpsTEstr.write("Tree 1 Test Error: " + str(err) + '\n')
 inc, tot, wInds = testADA(trees, alphas, data)
 adaTRstr.write("1 Tree Training: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc/tot) + '\n')
 inc, tot, wInds = testADA(trees, alphas, testData)
@@ -101,14 +99,14 @@ for it in range(1, 501):
     wF.write(str(weights) + '\n')
     trees.append(stumps.createStump(weights, arr).copy())
     inc, tot, wrongInds = testTree(trees[it], data)
-    stumpsTRstr.write("Tree" + str(it) + " Training: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc / tot) + '\n')
-    print(trees[it])
+    #print(trees[it])
     e = wTestTree(trees[it], data, weights)
+    stumpsTRstr.write("Tree " + str(it) + " Training Error: " + str(e) + '\n')
     alpha = 0.5 * math.log((1 - e) / (e))
     alphas.append(alpha)
     aF.write(str(alpha) + '\n')
-    inc, tot, wInds = testTree(trees[it], testData)
-    stumpsTEstr.write("Tree" + str(it) + "Test: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc / tot) + '\n')
+    err = wTestTree(trees[it], testData, weights)
+    stumpsTEstr.write("Tree" + str(it) + "Test Error: " + str(err) + '\n')
     inc, tot, wInds = testADA(trees, alphas, data)
     adaTRstr.write(str(it) + " Tree Training: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc / tot) + '\n')
     inc, tot, wInds = testADA(trees, alphas, testData)
