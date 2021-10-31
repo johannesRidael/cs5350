@@ -2,7 +2,7 @@ import random
 import sys
 import numpy as np
 import Bagging as bg
-import DecisionTree.NumTreesCreator as trees
+import DecisionTree.RanTreesCreator as trees
 from statistics import mean
 
 def convBin(s):
@@ -43,26 +43,26 @@ bVarList = []
 i = 0
 for key in tData.keys():
     avgb = 0
-    avgt = 0
+    #avgt = 0
     c = 0
     tpredList = []
     bpredList = []
     for bag in bagList:
-        tG = convBin(trees.predict(tData[key], bag[0]))
+        #tG = convBin(trees.predict(tData[key], bag[0]))
         bG = convBin(bg.predictBag(tData[key], bag))
-        avgt += tG
+        #avgt += tG
         avgb += bG
-        tpredList.append(tG)
+        #tpredList.append(tG)
         bpredList.append(bG)
         c += 1
-    tBiasList.append((convBin(tData[key][len(tData[key]) - 1]) - avgt / c) ** 2)
+    #tBiasList.append((convBin(tData[key][len(tData[key]) - 1]) - avgt / c) ** 2)
     bBiasList.append((convBin(tData[key][len(tData[key]) - 1]) - avgb / c) ** 2)
-    tVar = 0
+    #tVar = 0
     co = 0
-    for guess in tpredList:
-        tVar += (guess - avgt / c) ** 2
-        co += 1
-    tVarList.append(tVar / co)
+    #for guess in tpredList:
+    #    tVar += (guess - avgt / c) ** 2
+    #    co += 1
+    #tVarList.append(tVar / co)
     bVar = 0
     co = 0
     for guess in bpredList:
@@ -75,11 +75,11 @@ for key in tData.keys():
 
     i += 1
 
-tBias = mean(tBiasList)
-tVar = mean(tVarList)
+#tBias = mean(tBiasList)
+#tVar = mean(tVarList)
 bBias = mean(bBiasList)
 bVar = mean(bVarList)
 
 print("Type\tBias\tVariance\tMSE")
-print("1Tree\t", tBias, '\t', tVar, '\t', tBias + tVar)
-print("Bag\t", bBias, '\t', bVar, '\t', bBias + bVar)
+#print("1Tree\t", tBias, '\t', tVar, '\t', tBias + tVar)
+print("Ran\t", bBias, '\t', bVar, '\t', bBias + bVar)
