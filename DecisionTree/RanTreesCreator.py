@@ -17,6 +17,33 @@ def randSplits(size, card, past):
     random.shuffle(poss)
     return poss[:size]
 
+def quickselect(indexes, list, k):
+    """
+    Found at https://rcoh.me/posts/linear-time-median-finding/
+    modified to run by giving and taking indexes
+    Select the kth element in l (0 based)
+    :param l: List of numerics
+    :param k: Index
+    :param pivot_fn: Function to choose a pivot, defaults to random.choice
+    :return: The kth element of l
+    """
+    if len(list) == 1:
+        assert k == 0
+        return list[0]
+
+    pivot = list[random.choice(indexes)]
+
+    lows = [el for el in indexes if list[el] < pivot]
+    highs = [el for el in indexes if list[el] > pivot]
+    pivots = [el for el in indexes if list[el] == pivot]
+
+    if k < len(lows):
+        return quickselect(lows, list, k)
+    elif k < len(lows) + len(pivots):
+        # We got lucky and guessed the median
+        return pivots[0]
+    else:
+        return quickselect(highs, list, k - len(lows) - len(pivots))
 
 
 def findEE(data, indexes, splitInd, tagInd):
@@ -170,8 +197,15 @@ def predict(instance, tree):
     #print(currD[currI])
     return currD["val527"]
 
+def convToBin(num, tup):
+    if float(num) < tup[0]:
+        return 0
+    elif float(num) > tup[1]:
+        return 2
+    else: return 1
 
-def parseData(File):
+
+def parseData(File, testD=0):
     data = {}
     attCount = None
     f = open(File, 'r')
@@ -195,25 +229,28 @@ def parseData(File):
                     medList[i].append(int(terms[i]))
                 else:
                     medList[i] = None
-                attCount = len(terms) - 1
+            attCount = len(terms) - 1
+            if not testD: medList[len(medList) - 1] = None # don't want to convert our result to discrete even if we can
                 #if terms[i] == "unknown":
                 #    unknown.add(dataCount)
         else:
             for i in range(0, len(terms)):
                 allList[i].append(terms[i])
                 pList[i].add(terms[i])
-                if terms[i][len(terms[i]) - 1].isdigit():
+                if medList[i] is not None and terms[i][len(terms[i]) - 1].isdigit():
                     medList[i].append(int(terms[i]))
+                else: medList[i] = None
                 #if terms[i] == "unknown":
                 #    unknown.add(dataCount)
 
         data[dataCount] = terms.copy()
         indices.add(dataCount)
         dataCount += 1
-
+        inL = list(indices)
     for i in range(0, len(medList)):
         if medList[i] is not None:
-            medList[i] = median(medList[i])
+            medList[i] = medList[i][quickselect(inL, medList[i], int(len(medList[i]) / 3))], \
+                         medList[i][quickselect(inL, medList[i], int(2*len(medList[i])/3))]
 
 #    for i in range(0, attCount):
 #        unknownList.append(mode(allList[i]))
@@ -226,11 +263,8 @@ def parseData(File):
     for key in data.keys():
         for i in range(0, len(medList)):
             if medList[i] is not None:
-                pList[i] = {0, 1}
-                if int(data[key][i]) > medList[i]:
-                    data[key][i] = 1
-                else:
-                    data[key][i] = 0
+                pList[i] = {0, 1, 2}
+                data[key][i] = convToBin(data[key][i], medList[i])
 
     dataCount += 1
     f.close()

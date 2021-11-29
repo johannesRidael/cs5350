@@ -147,7 +147,7 @@ def predict(instance, tree):
     #currI = list(tree.keys())[0]
     currI = tree["index527"]
     currD = tree
-    attCount = len(instance) - 1
+    attCount = len(instance)
     #print(currD)
     while currI < attCount:
         #print("hold: ",hold)

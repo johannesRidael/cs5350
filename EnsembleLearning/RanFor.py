@@ -30,17 +30,17 @@ def testBag(trees, data: dict):
         total += 1
     return incorrect, total
 
-def createBag(data, T, arr, m = None):
+def createFor(data, T, arr, m = None):
     treeList = []
     if m is None: m = len(data)
     for i in range(1, T+1):
         indices = set()
         for j in range(len(data)):
             indices.add(randrange(len(data) - 1))
-        treeList.append(trees.createTree(indices, arr))
+        treeList.append(trees.createTree(indices, 4, arr))
     return treeList
 
-def createBagL(data, T, inds, ssize, arr, m = None):
+def createForL(data, T, inds, ssize, arr, m = None):
     treeList = []
     if m is None: m = len(data)
     for i in range(1, T+1):
@@ -50,23 +50,4 @@ def createBagL(data, T, inds, ssize, arr, m = None):
         treeList.append(trees.createTree(indices, ssize, arr))
     return treeList
 
-ErTeF = open('ranTe', 'w')
-ErTrF = open('ranTr', 'w')
 
-testD, testC, testM, testA = trees.parseData(TE_F)
-data, count, medians, arr = trees.parseData(TR_F)
-
-
-treeList = []
-
-for ssize in [6]:
-    print(ssize)
-    for i in range(1, 501):
-        indices = set()
-        for j in range(count):
-            indices.add(randrange(count-1))
-        treeList.append(trees.createTree(indices, ssize, arr))
-        inc, tot = testBag(treeList, data)
-        ErTrF.write("ss size: " + str(ssize) + " " + str(i) + " Tree Training: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc/tot) + '\n')
-        inc, tot = testBag(treeList, testD)
-        ErTeF.write("ss size: " + str(ssize) + " " + str(i) + " Tree Training: Incorrect: " + str(inc) + " Total: " + str(tot) + " Error: " + str(inc / tot) + '\n')
