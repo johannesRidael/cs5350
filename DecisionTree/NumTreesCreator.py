@@ -2,7 +2,7 @@ import math
 import sys
 from statistics import mode
 from statistics import median
-
+import numpy as np
 #DEPTH = 1
 #TRAINING_FILE = "train.csv"
 #TEST_FILE = "test.csv"
@@ -93,6 +93,8 @@ def weightedMode(data, inds, weights, card):
 
 
 def ID3(data, tree, count, card, indexes, depth, pastSplits, pList):
+    #if 0 in pastSplits:
+        #print()
     bf = True
     val = None
     for ind in indexes:
@@ -107,13 +109,14 @@ def ID3(data, tree, count, card, indexes, depth, pastSplits, pList):
         tree["val527"] = val
         return
 
-    if depth == card:
+    if depth >= card:
         #print("indexes: ", indexes)
         tags = []
         for ind in indexes:
-            tags.append(data[ind][card])
+            tags.append(int(data[ind][card]))
         #print("mode: ", mode(tags))
-        tree["val527"] = mode(tags)
+
+        tree["val527"] = np.average(tags)
         tree["index527"] = card
         #print("tree: ", tree)
 

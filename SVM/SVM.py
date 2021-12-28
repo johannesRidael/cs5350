@@ -19,22 +19,22 @@ def sloss(we, bee, x, y):
     return loss
 
 
-def tLoss(we, be):
+def tLoss(we, be, xs, ys, sea):
     loss = (we.T @ we) / 2
-    for i in range(len(exes)):
-        x = exes[i]
-        y = wise[i]
-        loss = loss + C * max(0, 1 - y * (we.T @ x + be))
+    for i in range(len(xs)):
+        x = xs[i]
+        y = ys[i]
+        loss = loss + sea * max(0, 1 - y * (we.T @ x + be))
     return loss
 
 
-def sciLoss(dw):
-    ow = dw[:4]
-    ob = dw[4]
-    return tLoss(ow, ob)
+def sciLoss(dw, xs, ys, sea):
+    ow = dw[:len(dw) - 1]
+    ob = dw[len(dw) - 1]
+    return tLoss(ow, ob, xs, ys, sea)
 
 
-def sGrad(we, b, x, y):
+def sGrad(we, b, x, y, sea):
     m = max(0, 1 - y * (we.T @ x + b))
 
     g = []
@@ -42,7 +42,7 @@ def sGrad(we, b, x, y):
         if m == 0:
             g.append(we[i])
         else:
-            g.append(we[i] - C * y * x[i])
+            g.append(we[i] - sea * y * x[i])
 
     # g = w.copy()
 
@@ -150,209 +150,209 @@ def aK(x1, x2, kernel=None):
     else:
         return x1.dot(x2)
 
+def runTest():
+    card = 4
+    data = {}
+    attCount = None
+    f = open("./bank-note/train.csv", 'r')
+    dataCount = 0
+    indices = set()
+    exes = []
+    wise = []
+    j = 0
+    for line in f:
+        exes.append([])
+        a = []
+        terms = line.strip().split(',')
+        for i in range(len(terms)):
+            if i < len(terms) - 1:
+                a.append(float(terms[i]))
+        exes[j] = np.array(a)
+        data[dataCount] = {}
+        data[dataCount]["x"] = np.array(a)
+        #exes[j] = a
+        data[dataCount]["y"] = to1(int(terms[card]))
+        wise.append(to1(int(terms[card])))
+        indices.add(dataCount)
+        dataCount += 1
+        j += 1
+    exes = np.array(exes)
+    wise = np.array(wise)
 
-card = 4
-data = {}
-attCount = None
-f = open("./bank-note/train.csv", 'r')
-dataCount = 0
-indices = set()
-exes = []
-wise = []
-j = 0
-for line in f:
-    exes.append([])
-    a = []
-    terms = line.strip().split(',')
-    for i in range(len(terms)):
-        if i < len(terms) - 1:
-            a.append(float(terms[i]))
-    exes[j] = np.array(a)
-    data[dataCount] = {}
-    data[dataCount]["x"] = np.array(a)
-    #exes[j] = a
-    data[dataCount]["y"] = to1(int(terms[card]))
-    wise.append(to1(int(terms[card])))
-    indices.add(dataCount)
-    dataCount += 1
-    j += 1
-exes = np.array(exes)
-wise = np.array(wise)
-
-K = np.empty((dataCount, dataCount))
-for i in range(dataCount):
-    for j in range(dataCount):
-        K[i, j] = aK(exes[i], exes[j], kernel="Gaussian")
-# print(K)
-# print(len(wise))
-# print("K: ", K.shape)
-# h = wise @ K
-# print("h:", h.shape)
-M = wise * K * wise.T
-# print("M: ", M.shape)
-# Q = wise @ K @ wise[:, np.newaxis]
-# print("Q: ", Q.shape)
-
-
-bnds = [(0, C)] * dataCount
-constraints = (#{'type': 'ineq', 'fun': lambda ays: conMat1 - np.dot(conMat2, ays), 'jac': lambda ays: -conMat2},
-               {'type': 'eq', 'fun': lambda x: np.dot(x, wise), 'jac': lambda x: wise})
+    K = np.empty((dataCount, dataCount))
+    for i in range(dataCount):
+        for j in range(dataCount):
+            K[i, j] = aK(exes[i], exes[j], kernel="Gaussian")
+    # print(K)
+    # print(len(wise))
+    # print("K: ", K.shape)
+    # h = wise @ K
+    # print("h:", h.shape)
+    M = wise * K * wise.T
+    # print("M: ", M.shape)
+    # Q = wise @ K @ wise[:, np.newaxis]
+    # print("Q: ", Q.shape)
 
 
-#a0 = np.random.rand(dataCount)
-#print(dual(a0))
-#print(extDual(a0))
+    bnds = [(0, C)] * dataCount
+    constraints = (#{'type': 'ineq', 'fun': lambda ays: conMat1 - np.dot(conMat2, ays), 'jac': lambda ays: -conMat2},
+                   {'type': 'eq', 'fun': lambda x: np.dot(x, wise), 'jac': lambda x: wise})
 
-"""
-for d in data.keys():
-    if data[d]["y"] == 1:
-        plt.scatter(data[d]["x"][0], data[d]["x"][1], marker="+", c="green")
-    else:
-        plt.scatter(data[d]["x"][0], data[d]["x"][1], marker="_", c="red")
-plt.show()
 
-for d in data.keys():
-    if data[d]["y"] == 1:
-        plt.scatter(data[d]["x"][2], data[d]["x"][3], marker="+", c="green")
-    else:
-        plt.scatter(data[d]["x"][2], data[d]["x"][3], marker="_", c="red")
+    #a0 = np.random.rand(dataCount)
+    #print(dual(a0))
+    #print(extDual(a0))
 
-plt.show()
-"""
-
-out = optimize.minimize(sciLoss, np.zeros(5), method='Nelder-Mead')
-print(out)
-
-optW = out.x[:4].copy()
-optB = out.x[4].copy()
-"""
-gam = 1
-gam0 = 1
-a = 1.1
-w0 = np.zeros(card)
-last = np.inf
-funs = []
-ws = [w0]
-bees = [0]
-# funs.append(tLoss(w0, data))
-inds = list(indices)
-updates = []
-
-j = 0
-wc = 0
-while j < 100:
-    random.shuffle(inds)
-    u = 0
-    for i in inds:
-        grad = sGrad(ws[wc], bees[wc], exes[i], wise[i])
-        bg = beeGee(ws[wc], bees[wc], exes[i], wise[i])
-        if wise[i] * (ws[wc] @ exes[i] + bees[wc]) <= 1:
-            ws.append(ws[wc] - gam * grad)
-            bees.append(bees[wc] - gam * bg)
+    """
+    for d in data.keys():
+        if data[d]["y"] == 1:
+            plt.scatter(data[d]["x"][0], data[d]["x"][1], marker="+", c="green")
         else:
-            ws.append((1 - gam) * ws[wc])
-        bees.append(bees[wc] - gam * bg)
-        fun = tLoss(ws[wc + 1], bees[wc + 1])
-        funs.append(fun)
-        # print(fun)
-        wc += 1
-    gam = gam0 / (1+ (gam0/a) * j)  # /(1+j) or /(1+ (gam0/a) * j)
-    j += 1
-plt.plot(funs)
-# plt.show()
-print(ws[len(ws) - 1])
-w = ws[len(ws) - 1]
-b = bees[len(bees) - 1]
-print(fun)
-print("*************************")
-print(tLoss(ws[wc], bees[wc]))
-"""
-a0 = np.random.rand(dataCount)
-# print("a0: ", a0)
-out = optimize.minimize(dual, a0, bounds=bnds, constraints=constraints, method="SLSQP", jac=jac)
-print(out.nit)
-aOpt = out.x
-# optimal alphas
-print(np.dot(wise, aOpt))
-for i in range(len(aOpt)):
-    if np.isclose(aOpt[i], 0):
-        aOpt[i] = 0
+            plt.scatter(data[d]["x"][0], data[d]["x"][1], marker="_", c="red")
+    plt.show()
+    
+    for d in data.keys():
+        if data[d]["y"] == 1:
+            plt.scatter(data[d]["x"][2], data[d]["x"][3], marker="+", c="green")
+        else:
+            plt.scatter(data[d]["x"][2], data[d]["x"][3], marker="_", c="red")
+    
+    plt.show()
+    """
 
-infInds = []
-mInds = []
-for i in range(len(aOpt)):
-    if aOpt[i] > 0:
-        infInds.append(i)
-        if aOpt[i] < C:
-            mInds.append(i)
+    out = optimize.minimize(sciLoss, np.zeros(5), method='Nelder-Mead')
+    print(out)
 
-print("Support Vectors: ", len(infInds))
-print("Support Inds: ", infInds)
+    optW = out.x[:4].copy()
+    optB = out.x[4].copy()
+    """
+    gam = 1
+    gam0 = 1
+    a = 1.1
+    w0 = np.zeros(card)
+    last = np.inf
+    funs = []
+    ws = [w0]
+    bees = [0]
+    # funs.append(tLoss(w0, data))
+    inds = list(indices)
+    updates = []
+    
+    j = 0
+    wc = 0
+    while j < 100:
+        random.shuffle(inds)
+        u = 0
+        for i in inds:
+            grad = sGrad(ws[wc], bees[wc], exes[i], wise[i])
+            bg = beeGee(ws[wc], bees[wc], exes[i], wise[i])
+            if wise[i] * (ws[wc] @ exes[i] + bees[wc]) <= 1:
+                ws.append(ws[wc] - gam * grad)
+                bees.append(bees[wc] - gam * bg)
+            else:
+                ws.append((1 - gam) * ws[wc])
+            bees.append(bees[wc] - gam * bg)
+            fun = tLoss(ws[wc + 1], bees[wc + 1])
+            funs.append(fun)
+            # print(fun)
+            wc += 1
+        gam = gam0 / (1+ (gam0/a) * j)  # /(1+j) or /(1+ (gam0/a) * j)
+        j += 1
+    plt.plot(funs)
+    # plt.show()
+    print(ws[len(ws) - 1])
+    w = ws[len(ws) - 1]
+    b = bees[len(bees) - 1]
+    print(fun)
+    print("*************************")
+    print(tLoss(ws[wc], bees[wc]))
+    """
+    a0 = np.random.rand(dataCount)
+    # print("a0: ", a0)
+    out = optimize.minimize(dual, a0, bounds=bnds, constraints=constraints, method="SLSQP", jac=jac)
+    print(out.nit)
+    aOpt = out.x
+    # optimal alphas
+    print(np.dot(wise, aOpt))
+    for i in range(len(aOpt)):
+        if np.isclose(aOpt[i], 0):
+            aOpt[i] = 0
 
-wDual = np.array([0, 0, 0, 0])
-for i in infInds:
-    wDual = wDual + aOpt[i] * wise[i].copy() * exes[i].copy()
-wDual = wDual / LA.norm(wDual)  # just to shrink our numbers a bit, doesn't actually change our line.
-bDual = getB(aOpt)
+    infInds = []
+    mInds = []
+    for i in range(len(aOpt)):
+        if aOpt[i] > 0:
+            infInds.append(i)
+            if aOpt[i] < C:
+                mInds.append(i)
 
-print("wDual: ", wDual)
-print("bDual: ", bDual)
-print("Dual Loss: ", tLoss(wDual, bDual))
+    print("Support Vectors: ", len(infInds))
+    print("Support Inds: ", infInds)
 
-cor, tot = 0, 0
-oCor, dcor = 0, 0
-for i in indices:
-    #if wise[i] * (w @ exes[i] + b) > 0:
-    #    cor += 1
-    if wise[i] * (optW @ exes[i] + optB) > 0:
-        oCor += 1
-    if wise[i] * gaussPred(aOpt, exes[i]) > 0: #(wDual.T @ exes[i] + bDual) > 0:
-        dcor += 1
-    tot += 1
+    wDual = np.array([0, 0, 0, 0])
+    for i in infInds:
+        wDual = wDual + aOpt[i] * wise[i].copy() * exes[i].copy()
+    wDual = wDual / LA.norm(wDual)  # just to shrink our numbers a bit, doesn't actually change our line.
+    bDual = getB(aOpt)
 
-data = {}
-attCount = None
-f = open("./bank-note/test.csv", 'r')
-dataCount = 0
-indices = set()
-texes = []
-twise = []
-j = 0
-for line in f:
-    texes.append([])
-    a = []
-    terms = line.strip().split(',')
-    for i in range(len(terms)):
-        if i < len(terms) - 1:
-            a.append(float(terms[i]))
-    data[dataCount] = {}
-    data[dataCount]["x"] = np.array(a)
-    texes[j] = a
-    data[dataCount]["y"] = to1(int(terms[card]))
-    twise.append(to1(float(terms[card])))
-    indices.add(dataCount)
-    dataCount += 1
-    j += 1
+    print("wDual: ", wDual)
+    print("bDual: ", bDual)
+    print("Dual Loss: ", tLoss(wDual, bDual))
 
-tcor, ttot = 0, 0
-otCor, dtcor = 0, 0
-for i in indices:
-    #if twise[i] * (w @ texes[i] + b) > 0:
-    #    tcor += 1
-    if twise[i] * (optW @ texes[i] + optB) > 0:
-        otCor += 1
-    if twise[i] * gaussPred(aOpt, texes[i]) > 0: #(wDual.T @ texes[i] + bDual) > 0:
-        dtcor += 1
-    ttot += 1
+    cor, tot = 0, 0
+    oCor, dcor = 0, 0
+    for i in indices:
+        #if wise[i] * (w @ exes[i] + b) > 0:
+        #    cor += 1
+        if wise[i] * (optW @ exes[i] + optB) > 0:
+            oCor += 1
+        if wise[i] * gaussPred(aOpt, exes[i]) > 0: #(wDual.T @ exes[i] + bDual) > 0:
+            dcor += 1
+        tot += 1
 
-#print("P Training Acc:\t", cor / tot)
-#print("P Testing Acc:\t", tcor / ttot)
-print("Opt train acc:\t", oCor / tot)
-print("opt test acc:\t", otCor / ttot)
+    data = {}
+    attCount = None
+    f = open("./bank-note/test.csv", 'r')
+    dataCount = 0
+    indices = set()
+    texes = []
+    twise = []
+    j = 0
+    for line in f:
+        texes.append([])
+        a = []
+        terms = line.strip().split(',')
+        for i in range(len(terms)):
+            if i < len(terms) - 1:
+                a.append(float(terms[i]))
+        data[dataCount] = {}
+        data[dataCount]["x"] = np.array(a)
+        texes[j] = a
+        data[dataCount]["y"] = to1(int(terms[card]))
+        twise.append(to1(float(terms[card])))
+        indices.add(dataCount)
+        dataCount += 1
+        j += 1
 
-# print(cor, tot)
-print("Dual Training Acc:\t", dcor / tot)
-# print(tcor, ttot)
-print("Dual Testing Acc:\t", dtcor / ttot)
+    tcor, ttot = 0, 0
+    otCor, dtcor = 0, 0
+    for i in indices:
+        #if twise[i] * (w @ texes[i] + b) > 0:
+        #    tcor += 1
+        if twise[i] * (optW @ texes[i] + optB) > 0:
+            otCor += 1
+        if twise[i] * gaussPred(aOpt, texes[i]) > 0: #(wDual.T @ texes[i] + bDual) > 0:
+            dtcor += 1
+        ttot += 1
 
-plt.show()
+    #print("P Training Acc:\t", cor / tot)
+    #print("P Testing Acc:\t", tcor / ttot)
+    print("Opt train acc:\t", oCor / tot)
+    print("opt test acc:\t", otCor / ttot)
+
+    # print(cor, tot)
+    print("Dual Training Acc:\t", dcor / tot)
+    # print(tcor, ttot)
+    print("Dual Testing Acc:\t", dtcor / ttot)
+
+    plt.show()
